@@ -48,10 +48,19 @@ class Volume:
 	EMPTY_BITMAP = '-' for _ in range(128)
 
 	def __init__(self, name):
-		EMPTY_BITMAP[0] = '+'
+		# Initialize block 0 with root directory and block bitmap information
+		Volume.EMPTY_BITMAP[0] = '+'
 
 	def format(self):
 		pass
+
+class Directory:
+	
+	def __init__(self, entries=[Entry.FILE_ENTRY for _ in range(0, 8)]):
+		self.entries = entries
+		for i in range(8 - (len(self.entries) % 8)):
+			self.entries.append(Entry.FILE_ENTRY)
+		
 
 class Entry:
 	DIRECTORY_ENTRY = 'd:         0000:000 000 000 000 000 000 000 000 000 000 000 000 '
