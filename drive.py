@@ -49,7 +49,7 @@ class Drive:
         if n < 0 or n >= Drive.DRIVE_SIZE:
             raise IOError('block out of range')
         if len(data) != Drive.BLK_SIZE:
-            raise ValueError('data not block size')
+            raise ValueError('data not block size, was ', len(data))
         self.file.seek(n * (Drive.BLK_SIZE + len(Drive.SEPARATOR)))
         written = self.file.write(data)
         self.file.flush()
