@@ -49,8 +49,29 @@ class TinyDOS:
 		if block_num == 0:
 			self.volume.create_file(0, file_name)
 		else:
-			# Read block, find dir, attempt create_file until file created or all blocks exhausted.  Allocate new block if necessary
-			pass
+			dir_entry = Entry()
+			block = self.volume.read_block(blocks_num)
+			dir = Directory.create_directory(block)
+			for i in range(0, len(dir.entries)):
+				if dir.entries[i].is_entry(path[len(path) - 1]):
+					dir_entry = dir.entries[i]
+					break
+			file_created = False
+			empty_block = 13
+			for i in range(0, len(dir_entry.blocks)):
+				if dir_entry.blocks[i] == '000':
+					if empty_block == 13:
+						empty_block = i
+					continue
+				if volume.create_file(int(dir_entry.blocks[i]), file_name):
+					file_created = True
+					break
+			if not file_created:
+				if empty_block == 13:
+					raise IOError('Directory does not have any more available space')
+				# Assign block to dir
+				self.volume.create_file(empty_block, file_name)
+
 
 	def mkdir(self, path_as_string):
 		pass
@@ -78,7 +99,24 @@ class TinyDOS:
 
 	def find_block(self, path):
 		if len(path) > 1:
-			return 1
+			blocks = [0]
+			for i in range (0, len(path) - 1):
+				for j in range(0, len(blocks)):
+					dir_found = False
+					block = self.volume.read_block(blocks[j])
+					dir = Directory.create_directory(block)
+					for k in range(0, len(dir.entries)):
+						if dir.entries[k].is_entry(path[i]):
+							if i == (len(path) - 1):
+								return blocks[j]
+							blocks = []
+							for l in range(0, len(dir.entries)):
+								blocks.append(int(dir.entries[l]))
+							dir_found = True
+						if dir_found:
+							break
+					if dir_found:
+						break
 		else:
 			return 0
 
