@@ -2,54 +2,49 @@ from entry import *
 
 class Directory:
 	
-	def __init__(self, is_root=False, entries=[Entry() for i in range(0,6)]):
-		self.entries = entries
-		self.blocks = list()
-		if is_root:
-			self.total_entries = 6
-			for i in range(len(self.entries), 6):
-				self.entries.append(Entry.FILE_ENTRY)
-			self.blocks.append('')
-			for i in range(0, 6):
-				self.blocks[0] += (self.entries[i].entry)
+	def __init__(self, is_root, entries, read_block):
+		self.is_root = is_root
+		self.entries = entries[:]
+		self.read_block = read_block
+		self.block = ''
+		total_entries = 0
+		if self.is_root:
+			total_entries = 6
 		else:
-			self.total_entries = 8
-			for i in range(8 - (len(self.entries) % 8)):
-				self.entries.append(Entry.FILE_ENTRY)
-			for i in range(0, len(self.entries)/8 - 1):
-				if i > len(self.blocks):
-					self.blocks.append('')
-				else:
-					self.blocks[i] = ''
-				for j in range(i*8, i*8 + 8):
-					self.blocks[i] += (self.entries[j].entry)
-	
+			total_entries = 8
+		for i in range(len(self.entries), total_entries):
+			new_entry = Entry('', '0000', ['000' for i in range(0, 12)], True, read_block)
+			self.entries.append(new_entry)
+		for i in range(0, total_entries):
+			self.block += (self.entries[i].entry)
+
 	@staticmethod
-	def create_directory(string):
+	def create_directory(string, read_block):
 		string_entries = [string[i:i+64] for i in range(0, len(string), 64)]
 		entries = []
 		for i in range(0, len(string_entries)):
-			entries.append(Entry.create_entry(string_entries[i]))
-		return Directory(is_root=(len(string_entries) == 6), entries=entries)
+			entries.append(Entry.create_entry(string_entries[i], read_block))
+		return Directory((len(string_entries) == 6), entries, read_block)
 
 	def add_entry(self, entry):
-		for i in self.entries:
-			if self.entries[i].get_entry() == Entry.FILE_ENTRY:
+		for i in range(0, len(self.entries)):
+			if self.entries[i].entry == Entry.FILE_ENTRY:
 				self.entries[i] = entry
-				self.refresh_blocks()
-				return
-		self.entries.append(entry)
-		for i in range(len(self.entries), len(self.entries)+7):
-				self.entries.append(Entry.FILE_ENTRY)
-		self.refresh_blocks()
+				self.entries[i].read_block = self.read_block
+				self.refresh_block()
+				return True
+		return False
+	
+	def update_entry(self, name, entry):
+		for i in range(0, len(self.entries)):
+			if self.entries[i].matches(name):
+				self.entries[i] = entry
+				self.entries[i].read_block = self.read_block
+				self.refresh_block()
+				return True
+		return False
 
-	def refresh_blocks(self):
-		if is_root:
-			self.blocks[0] = ''
-			for i in range(0, 6):
-				self.blocks[0].append(self.entries[i].get_entry)
-		else:
-			for i in range(0, len(self.entries)/8):
-				self.blocks[i] = ''
-				for j in range(i*8, i*8 + 8):
-					self.blocks[i].append(self.entries[j].get_entry)
+	def refresh_block(self):
+		self.block = ''
+		for i in range(0, len(self.entries)):
+			self.block += (self.entries[i].entry)
