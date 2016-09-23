@@ -36,15 +36,15 @@ class Volume:
 			if self.bitmap[i] == '-':
 				self.bitmap[i] = '+'
 				entry.add_block(i)
-				self.update_entry(entry)
+				self.update_entry(entry.name, entry)
 				self.update_bitmap()
 				return i
 		raise IOError('Cannot allocate more memory to specified file/directory')
 
-	def update_entry(self, entry):
+	def update_entry(self, name, entry):
 		block = self.read_block(entry.read_block)
 		dir = Directory.create_directory(block, entry.read_block)
-		dir.update_entry(entry.name, entry)
+		dir.update_entry(name, entry)
 		self.write_block(entry.read_block, dir.block)
 
 	def update_bitmap(self):

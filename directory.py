@@ -40,6 +40,7 @@ class Directory:
 			if self.entries[i].matches(name):
 				self.entries[i] = entry
 				self.entries[i].read_block = self.read_block
+				self.entries[i].refresh_entry()
 				self.refresh_block()
 				return True
 		return False
